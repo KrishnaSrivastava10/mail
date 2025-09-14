@@ -10,6 +10,7 @@ const EmailSchema = new mongoose.Schema({
         required: true
     },
     subject: String,
+    body: { type: String }, 
     date: {
         type:Date,
         required:true

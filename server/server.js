@@ -35,19 +35,20 @@ transporter.verify((error, success) => {
   }
 });
 
-// ✅ Email API route
+import Email from "./model/email.js";
+
+
 app.post("/sendMail", async (req, res) => {
   const { to, subject, body } = req.body;
 
   console.log("📩 Incoming request:", req.body);
 
   if (!to) {
-    return res
-      .status(400)
-      .json({ success: false, error: "Recipient email is required" });
+    return res.status(400).json({ success: false, error: "Recipient email is required" });
   }
 
   try {
+    // Send email
     const info = await transporter.sendMail({
       from: "krishna.testtechdev@gmail.com",
       to,
@@ -57,25 +58,39 @@ app.post("/sendMail", async (req, res) => {
 
     console.log("Email sent:", info.response);
 
-    return res.json({ success: true, message: "Email sent successfully!" });
+    // ✅ Save to MongoDB with body
+    const email = new Email({
+      to,
+      from: "krishna.testtechdev@gmail.com",
+      subject,
+      body,                // <-- include body
+      date: new Date(),
+      name: "Krishna",     // could also come from logged-in user
+      starred: false,
+      bin: false,
+      type: "sent",
+    });
+
+    await email.save();
+    console.log("Email saved to MongoDB");
+
+    return res.json({ success: true, message: "Email sent & saved successfully!" });
   } catch (error) {
-    console.error("Error sending email:", error);
-    return res
-      .status(500)
-      .json({ success: false, error: error.message || "Failed to send email" });
+    console.error("Error sending/saving email:", error);
+    return res.status(500).json({ success: false, error: error.message });
   }
 });
+
 
 
 app.use('/',routes)
 
 Connection();
 app.get("/", (req, res) => {
-  res.send("✅ Backend running!");
+  res.send("Backend running!");
 });
 
 
-// ✅ Run server on port 5001 (not 5000, avoids AirTunes conflict)
 app.listen(5001, () => {
   console.log("Server running at http://localhost:5001");
 });

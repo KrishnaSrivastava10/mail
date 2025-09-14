@@ -6,8 +6,10 @@ import {
   InputBase,
   TextField,
   Typography,
-  styled,
+  
 } from "@mui/material";
+import { styled } from "@mui/material/styles"; 
+
 import { Close, DeleteOutline } from "@mui/icons-material";
 import React, { useState } from "react";
 import useApi from '../hooks/useApi';
@@ -65,13 +67,31 @@ const ComposeMail = ({ openDialog, setOpenDialog }) => {
   const [subject, setSubject] = useState("");
   const [body, setBody] = useState("");
   const sentEmailService = useApi(API_URLS.saveSentEmail);
+  const saveDraftService = useApi(API_URLS.saveDraftEmails);
 
-  const closeComposeMail = (e) => {
+  const closeComposeMail = async(e) => {
     e.preventDefault();
-    setOpenDialog(false);
+    const payload = {
+        to,
+        from: "krishna.testtechdev@gmail.com",
+        subject: subject || "(No Subject)",
+        body: body || "(No Content)",
+        date: new Date(),
+        image: "",
+        name: "krishna.testtechdev@gmail.com",
+        starred: false,
+        type: "drafts",
+      };
+
+      await saveDraftService.call(payload);
+
+      if (!saveDraftService.error) {
+        setOpenDialog(false);
+      }
   };
 
-  const sendMail = async (e) => {
+
+const sendMail = async (e) => {
   e.preventDefault();
 
   if (!to) {
@@ -90,40 +110,25 @@ const ComposeMail = ({ openDialog, setOpenDialog }) => {
       }),
     });
 
-    const data = await response.json(); // ✅ FIX: parse backend response
+    const data = await response.json();
 
     if (response.ok && data.success) {
-      // Save email in your DB
-      const payload = {
-        to,
-        from: "krishna.testtechdev@gmail.com",
-        subject: subject || "(No Subject)",
-        body: body || "(No Content)",
-        date: new Date(),
-        image: "",
-        name: "krishna.testtechdev@gmail.com",
-        starred: false,
-        type: "sent",
-      };
+      // ✅ No need to call sentEmailService again
+      setOpenDialog(false);
 
-      await sentEmailService.call(payload);
-
-      if (!sentEmailService.error) {
-        setOpenDialog(false);
-      }
-
-      alert("✅ Email sent successfully!");
+      alert("Email sent successfully!");
       setTo("");
       setSubject("");
       setBody("");
     } else {
-      alert("❌ Failed to send: " + (data.error || "Unknown error"));
+      alert("Failed to send: " + (data.error || "Unknown error"));
     }
   } catch (err) {
     console.error("Error:", err);
     alert("⚠️ Something went wrong: " + err.message);
   }
 };
+
 
   return (
     <Dialog open={openDialog} PaperProps={{ sx: dialogstyle }}>
