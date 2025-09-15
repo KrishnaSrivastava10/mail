@@ -1,7 +1,8 @@
 import mongoose from "mongoose"
+import 'dotenv/config';
 
 const Connection = async () => {
-  const DB_URI = `mongodb+srv://krishna0mail0project:krishna123@mail.ynxqzud.mongodb.net/?retryWrites=true&w=majority&appName=mail`;
+  const DB_URI = process.env.MONGODB_URI;
   try {
     await mongoose.connect(DB_URI);
     console.log('Database connected successfully');
